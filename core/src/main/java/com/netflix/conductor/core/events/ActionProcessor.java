@@ -31,6 +31,7 @@ import com.netflix.conductor.core.execution.ParametersUtils;
 import com.netflix.conductor.core.execution.WorkflowExecutor;
 import com.netflix.conductor.core.utils.JsonUtils;
 import com.netflix.conductor.service.MetadataService;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -88,20 +89,32 @@ public class ActionProcessor {
 
         Map<String, Object> input = new HashMap<>();
         input.put("workflowId", taskDetails.getWorkflowId());
+        input.put("taskId", taskDetails.getTaskId());
         input.put("taskRefName", taskDetails.getTaskRefName());
         input.putAll(taskDetails.getOutput());
 
         Map<String, Object> replaced = parametersUtils.replace(input, payload);
-        String workflowId = "" + replaced.get("workflowId");
-        String taskRefName = "" + replaced.get("taskRefName");
-        Workflow found = executor.getWorkflow(workflowId, true);
+        String workflowId = (String) replaced.get("workflowId");
+        String taskId = (String) replaced.get("taskId");
+        String taskRefName = (String) replaced.get("taskRefName");
+
+        Workflow found = null;
+        if (StringUtils.isNotEmpty(workflowId)) {
+            found = executor.getWorkflow(workflowId, true);
+        }
         if (found == null) {
             replaced.put("error", "No workflow found with ID: " + workflowId);
             return replaced;
         }
-        Task task = found.getTaskByRefName(taskRefName);
+        Task task = null;
+        if (StringUtils.isNotEmpty(taskId)) {
+            task = found.getTasks().stream().filter(t -> taskId.equals(t.getTaskId())).findAny().orElse(null);
+        } else if (StringUtils.isNotEmpty(taskRefName)) {
+            task = found.getTaskByRefName(taskRefName);
+        }
+
         if (task == null) {
-            replaced.put("error", "No task found with reference name: " + taskRefName + ", workflowId: " + workflowId);
+            replaced.put("error", "No task found with taskId: " + taskId + ", reference name: " + taskRefName + ", workflowId: " + workflowId);
             return replaced;
         }
 

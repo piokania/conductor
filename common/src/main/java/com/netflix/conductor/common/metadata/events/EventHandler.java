@@ -213,6 +213,8 @@ public class EventHandler {
 	public static class TaskDetails {
 		
 		private String workflowId;
+
+		private String taskId;
 		
 		private String taskRefName;
 		
@@ -231,6 +233,20 @@ public class EventHandler {
 		 */
 		public void setWorkflowId(String workflowId) {
 			this.workflowId = workflowId;
+		}
+
+		/**
+		 * @return the taskId
+		 */
+		public String getTaskId() {
+			return taskId;
+		}
+
+		/**
+		 * @param taskId the taskId to set
+		 */
+		public void setTaskId(String taskId) {
+			this.taskId = taskId;
 		}
 
 		/**
